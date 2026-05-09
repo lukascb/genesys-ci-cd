@@ -1,59 +1,73 @@
-name: Genesys CI Configuration Validation
+name: Genesys Template Processor
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    # Novo gatilho: Aciona apenas quando arquivos YAML são inseridos/alterados nesta pasta
+    paths:
+      - 'template_atualizado/*.yaml'
 
 jobs:
-  validate-and-store:
+  process-template:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Permissão para realizar o push de volta ao repositório
+      contents: write
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2 # Necessário para comparar o commit atual com o anterior
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Create Output Directory
-        run: mkdir -p output
+      - name: Ensure Directories Exist
+        run: mkdir -p template_atualizado template_final
 
-      - name: Run Comparison and Generate Files
+      - name: Process Changed Files
         run: |
-          # Executa o script. Certifique-se de que o compare.py salve os arquivos 
-          # ou que você os mova para a pasta output após a execução.
-          python compare.py -f1 TEMPLATE.yaml -f2 CODIGO.yaml
+          # Detecta arquivos YAML novos ou modificados no diretório alvo
+          # 'git diff' entre o commit anterior (HEAD^) e o atual (HEAD)
+          FILES=$(git diff --name-only HEAD^ HEAD | grep '^template_atualizado/.*\.yaml$' || true)
           
-          # Move os arquivos gerados para o diretório de destino
-          # (Ajuste se o script já salvar diretamente em output/)
-          mv template_gerado.yaml vars.txt output/ 2>/dev/null || true
+          if [ -z "$FILES" ]; then
+            echo "Nenhuma mudança detectada via git diff. Verificando commit atual..."
+            FILES=$(git show --name-only --format="" HEAD | grep '^template_atualizado/.*\.yaml$' || true)
+          fi
 
-      - name: Commit and Push Changes
+          for file in $FILES; do
+            if [ -f "$file" ]; then
+              echo "Processando: $file"
+              
+              # Execução do script conforme sua especificação
+              python compare.py -f1 "$file" -f2 template_gerado.yaml -o ./template_final/template_final.yaml
+              
+              # Move o vars.txt gerado para a pasta final
+              if [ -f "vars.txt" ]; then
+                mv vars.txt template_final/
+              fi
+            fi
+          done
+
+      - name: Commit and Push Results
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Adiciona o diretório inteiro
-          git add output/
+          git add template_final/
           
-          # Verifica se houve mudanças reais para evitar commits vazios
+          # Evita erro se não houver mudanças para commitar
           if git diff --staged --quiet; then
-            echo "Nenhuma alteração detectada nos arquivos de saída."
+            echo "Sem alterações para salvar no template_final."
           else
-            git commit -m "chore: update comparison outputs (template & vars) [skip ci]"
+            git commit -m "chore: auto-update template_final from template_atualizado [skip ci]"
             git push
           fi
