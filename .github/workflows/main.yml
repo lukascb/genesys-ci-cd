@@ -10,13 +10,13 @@ jobs:
   validate-and-store:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Permissão necessária para realizar o push de volta ao repositório
+      contents: write # Permissão para realizar o push de volta ao repositório
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Garante o histórico para evitar conflitos no push
+          fetch-depth: 0
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -29,26 +29,31 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Comparison and Generate Template
-        run: |
-          python compare.py -f1 TEMPLATE.yaml -f2 CODIGO.yaml
-          # O script deve gerar o arquivo template_gerado.yaml
+      - name: Create Output Directory
+        run: mkdir -p output
 
-      - name: Commit and Push generated template
+      - name: Run Comparison and Generate Files
+        run: |
+          # Executa o script. Certifique-se de que o compare.py salve os arquivos 
+          # ou que você os mova para a pasta output após a execução.
+          python compare.py -f1 TEMPLATE.yaml -f2 CODIGO.yaml
+          
+          # Move os arquivos gerados para o diretório de destino
+          # (Ajuste se o script já salvar diretamente em output/)
+          mv template_gerado.yaml vars.txt output/ 2>/dev/null || true
+
+      - name: Commit and Push Changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Verifica se o arquivo foi realmente gerado e se houve alteração
-          if [ -f "template_gerado.yaml" ]; then
-            git add template_gerado.yaml
-            if git diff --staged --quiet; then
-              echo "Nenhuma alteração detectada no template_gerado.yaml."
-            else
-              git commit -m "chore: update template_gerado.yaml [skip ci]"
-              git push
-            fi
+          # Adiciona o diretório inteiro
+          git add output/
+          
+          # Verifica se houve mudanças reais para evitar commits vazios
+          if git diff --staged --quiet; then
+            echo "Nenhuma alteração detectada nos arquivos de saída."
           else
-            echo "Erro: template_gerado.yaml não foi encontrado."
-            exit 1
+            git commit -m "chore: update comparison outputs (template & vars) [skip ci]"
+            git push
           fi
