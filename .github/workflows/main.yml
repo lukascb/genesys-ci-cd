@@ -1,14 +1,16 @@
-name: Genesys Template Processor
+name: Genesys Multi-Stage Pipeline
 
 on:
   push:
     branches: [ "main" ]
-    # Novo gatilho: Aciona apenas quando arquivos YAML são inseridos/alterados nesta pasta
     paths:
-      - 'template_atualizado/*.yaml'
+      - 'entrada/**'
+      - 'template_atualizado/**'
 
 jobs:
-  process-template:
+  # ACTION 01: Processamento da pasta 'entrada'
+  process-input:
+    if: contains(github.event.head_commit.modified, 'entrada/') || contains(github.event.head_commit.added, 'entrada/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,57 +19,88 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # Necessário para comparar o commit atual com o anterior
+          fetch-depth: 0
 
-      - name: Set up Python 3.11
+      - name: Setup Environment
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
+      - name: Create Directories
+        run: mkdir -p entrada output template_atualizado template_final
+
+      - name: Process Pairs in Entrada
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Ensure Directories Exist
-        run: mkdir -p template_atualizado template_final
-
-      - name: Process Changed Files
-        run: |
-          # Detecta arquivos YAML novos ou modificados no diretório alvo
-          # 'git diff' entre o commit anterior (HEAD^) e o atual (HEAD)
-          FILES=$(git diff --name-only HEAD^ HEAD | grep '^template_atualizado/.*\.yaml$' || true)
-          
-          if [ -z "$FILES" ]; then
-            echo "Nenhuma mudança detectada via git diff. Verificando commit atual..."
-            FILES=$(git show --name-only --format="" HEAD | grep '^template_atualizado/.*\.yaml$' || true)
-          fi
-
-          for file in $FILES; do
-            if [ -f "$file" ]; then
-              echo "Processando: $file"
+          # Procura por arquivos .yaml (ignore case) que não contenham _TEMPLATE no nome
+          shopt -s nocaseglob
+          for file in entrada/*.yaml; do
+            if [[ ! "$file" =~ _TEMPLATE\.yaml$ ]]; then
+              BASE_NAME=$(basename "$file" .yaml)
+              TEMPLATE_FILE="entrada/${BASE_NAME}_TEMPLATE.yaml"
               
-              # Execução do script conforme sua especificação
-              python compare.py -f1 "$file" -f2 template_gerado.yaml -o ./template_final/template_final.yaml
-              
-              # Move o vars.txt gerado para a pasta final
-              if [ -f "vars.txt" ]; then
-                mv vars.txt template_final/
+              # Verifica se o par _TEMPLATE existe
+              if [ -f "$TEMPLATE_FILE" ]; then
+                echo "Par detectado: $file e $TEMPLATE_FILE"
+                OUTPUT_FILE="output/${BASE_NAME}_TEMPLATE_GERADO.yaml"
+                
+                python compare.py -f1 "$TEMPLATE_FILE" -f2 "$file" -o "$OUTPUT_FILE"
+                
+                # O vars.txt gerado também vai para o output
+                if [ -f "vars.txt" ]; then
+                  mv vars.txt output/
+                fi
               fi
             fi
           done
 
-      - name: Commit and Push Results
+      - name: Commit Action 01 Results
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git add output/
+          git diff --staged --quiet || (git commit -m "action 01: generate templates [skip ci]" && git push)
+
+  # ACTION 02: Processamento da pasta 'template_atualizado'
+  process-template-final:
+    if: contains(github.event.head_commit.modified, 'template_atualizado/') || contains(github.event.head_commit.added, 'template_atualizado/')
+    runs-on: ubuntu-latest
+    needs: process-input # Garante ordem se ambos forem alterados no mesmo push
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create Directories
+        run: mkdir -p template_atualizado template_final
+
+      - name: Run Final Comparison
+        run: |
+          # Define os arquivos conforme sua regra
+          # Obs: Ajuste os nomes caso eles venham com prefixos dinâmicos da Action 01
+          FILE_GERADO="template_atualizado/ARQUIVO_TEMPLATE_GERADO.yaml"
+          FILE_FINAL="template_atualizado/ARQUIVO_TEMPLATE_FINAL.yaml"
           
-          git add template_final/
-          
-          # Evita erro se não houver mudanças para commitar
-          if git diff --staged --quiet; then
-            echo "Sem alterações para salvar no template_final."
+          if [ -f "$FILE_GERADO" ] && [ -f "$FILE_FINAL" ]; then
+            python compare.py -f1 "$FILE_FINAL" -f2 "$FILE_GERADO" -o "./template_final/ARQUIVO_TEMPLATE_FINAL.yaml"
+            
+            # Move vars.txt para a pasta final
+            if [ -f "vars.txt" ]; then
+              mv vars.txt template_final/
+            fi
           else
-            git commit -m "chore: auto-update template_final from template_atualizado [skip ci]"
-            git push
+            echo "Arquivos necessários não encontrados em template_atualizado."
           fi
+
+      - name: Commit Action 02 Results
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add template_final/
+          git diff --staged --quiet || (git commit -m "action 02: update final template [skip ci]" && git push)
