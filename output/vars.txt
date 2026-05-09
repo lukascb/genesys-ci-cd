@@ -1,0 +1,2 @@
+FLUXO_NAME = "ValidadorCPF"
+DIVISION = "NOME_DIVISAO"

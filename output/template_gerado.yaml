@@ -1,0 +1,40 @@
+inboundCall:
+  name: "{{FLUXO_NAME}}"
+  description: URA SAC Dividida - NEW
+  division: {{DIVISION}}
+  startUpRef: "/inboundCall/tasks/task[01 - Roteamento Inicial_12]"
+  defaultLanguage: pt-br
+  supportedLanguages:
+    pt-br:
+      defaultLanguageSkill:
+        noValue: true
+      textToSpeech:
+        Genesys Enhanced TTS:
+          voice: pt-BR-FranciscaNeural
+                                                        "no":
+                                                          actions:
+                                                            - updateData:
+                                                                name: Update Data
+                                                                statements:
+                                                                  - prompt:
+                                                                      variable: Task.CTL_audioMenu
+                                                                      value:
+                                                                        exp: IF(Task.LOOP_menu == 0, Prompt.OlaSAC_Inc , Prompt.OlaSAC_Inc2)
+                                                            - loopNext:
+                                                                name: Next Loop
+                              - updateData:
+                                  name: Validador CPF
+                                  statements:
+                                    - integer:
+                                        variable: Task.CTL_CPF_Digito_01
+                                        value:
+                                          exp: "(10*Sum(     ToInt(Substring(Flow.INP_ColetaCPF,0,1))*10,     ToInt(Substring(Flow.INP_ColetaCPF,1,1))*9,     ToInt(Substring(Flow.INP_ColetaCPF,2,1))*8,     ToInt(Substring(Flow.INP_ColetaCPF,3,1))*7,     ToInt(Substring(Flow.INP_ColetaCPF,4,1))*6,     ToInt(Substring(Flow.INP_ColetaCPF,5,1))*5,     ToInt(Substring(Flow.INP_ColetaCPF,6,1))*4,     ToInt(Substring(Flow.INP_ColetaCPF,7,1))*3,     ToInt(Substring(Flow.INP_ColetaCPF,8,1))*2     ) %11)"
+                                    - integer:
+                                        variable: Task.CTL_CPF_Digito_02
+                                        value:
+                                          exp: "(10*Sum(     ToInt(Substring(Flow.INP_ColetaCPF,0,1))*11,     ToInt(Substring(Flow.INP_ColetaCPF,1,1))*10,     ToInt(Substring(Flow.INP_ColetaCPF,2,1))*9,     ToInt(Substring(Flow.INP_ColetaCPF,3,1))*8,     ToInt(Substring(Flow.INP_ColetaCPF,4,1))*7,     ToInt(Substring(Flow.INP_ColetaCPF,5,1))*6,     ToInt(Substring(Flow.INP_ColetaCPF,6,1))*5,     ToInt(Substring(Flow.INP_ColetaCPF,7,1))*4,     ToInt(Substring(Flow.INP_ColetaCPF,8,1))*3,     ToInt(Substring(Flow.INP_ColetaCPF,9,1))*2     ) %11)"
+                                    - boolean:
+                                        variable: Flow.CTL_Doc_Valido
+                                        value:
+                                          exp: "If ((Flow.INP_ColetaCPF == \"11111111111\" or \nFlow.INP_ColetaCPF == \"22222222222\" or\nFlow.INP_ColetaCPF == \"33333333333\" or\nFlow.INP_ColetaCPF == \"44444444444\" or\nFlow.INP_ColetaCPF == \"55555555555\" or\nFlow.INP_ColetaCPF == \"66666666666\" or\nFlow.INP_ColetaCPF == \"77777777777\" or\nFlow.INP_ColetaCPF == \"88888888888\" or\nFlow.INP_ColetaCPF == \"99999999999\"), false,\n(If(Task.CTL_CPF_Digito_01 == 10, 0, Task.CTL_CPF_Digito_01) == ToInt(Substring(Flow.INP_ColetaCPF,9,1)) and If(Task.CTL_CPF_Digito_02==10, 0, Task.CTL_CPF_Digito_02) == ToInt(Substring(Flow.INP_ColetaCPF,10,1))))"
+ 
