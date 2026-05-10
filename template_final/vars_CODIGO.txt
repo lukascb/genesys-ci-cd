@@ -1,0 +1,7 @@
+FLUXO_NAME = "UpdateData"
+DESCRIPTION = "URASACDividida-NEW"
+TTS_IDIOMA = "pt-BR-FranciscaNeural"
+CODIGO_CPF_DIGITO_01 = "IF(Task.LOOP_menu==0,Prompt.OlaSAC_Inc,Prompt.OlaSAC_Inc2)"
+CODIGO_CPF_DIGITO_02 = "IF(Task.LOOP_menu==0,Prompt.OlaSAC_Inc,Prompt.OlaSAC_Inc2)"
+"LOGSalvaCDR:T07-E" = "UpdateData"
+EXPRESSAO_FINAL = "IF(Task.LOOP_menu==0,Prompt.OlaSAC_Inc,Prompt.OlaSAC_Inc2)"
