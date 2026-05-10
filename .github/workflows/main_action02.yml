@@ -2,68 +2,80 @@ name: "Action 02 - Consolidação Final"
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
     paths:
       - 'template_atualizado/**'
 
 jobs:
-  finalize-template:
+  consolidation:
+    name: consolidate-templates
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Initialize Directories
-        run: mkdir -p template_atualizado template_final
-
-      - name: Run Comparison and Update Repository
+      - name: Ensure directories exist
         run: |
-          # Definição dos caminhos conforme sua regra
-          FILE_GERADO="template_atualizado/ARQUIVO_TEMPLATE_GERADO.yaml"
-          FILE_FINAL_INPUT="template_atualizado/ARQUIVO_TEMPLATE_FINAL.yaml"
+          mkdir -p template_atualizado template_final
+
+      - name: Dynamic Processing and Consolidation
+        shell: bash
+        run: |
+          # Habilita o rastreio de erros e iteração limpa
+          shopt -s nullglob
           
-          # Verifica se os arquivos necessários existem para processar
-          if [ -f "$FILE_GERADO" ] && [ -f "$FILE_FINAL_INPUT" ]; then
-            echo "Arquivos encontrados. Iniciando atualização do template final..."
+          echo "Iniciando busca por arquivos *_TEMPLATE_GERADO.yaml em template_atualizado/..."
+          
+          for gerado_path in template_atualizado/*_TEMPLATE_GERADO.yaml; do
+            # Extração do nome base (Ex: template_atualizado/servico_TEMPLATE_GERADO.yaml -> servico)
+            filename=$(basename "$gerado_path")
+            prefix="${filename%_TEMPLATE_GERADO.yaml}"
             
-            # Executa o script python gerando a saída diretamente em template_final
-            python compare.py -f1 "$FILE_FINAL_INPUT" -f2 "$FILE_GERADO" -o "./template_final/ARQUIVO_TEMPLATE_FINAL.yaml"
+            # Define o caminho do arquivo FINAL correspondente
+            final_path="template_atualizado/${prefix}_TEMPLATE_FINAL.yaml"
+            output_path="template_final/${prefix}_TEMPLATE_FINAL.yaml"
             
-            # Move o vars.txt gerado pelo script para o diretório template_final
-            if [ -f "vars.txt" ]; then
-              mv vars.txt template_final/
-              echo "Arquivo vars.txt movido para template_final."
+            if [[ -f "$final_path" ]]; then
+              echo "---------------------------------------------------"
+              echo "Processando Par Encontrado:"
+              echo "  - Gerado: $gerado_path"
+              echo "  - Final:  $final_path"
+              
+              python compare.py -f1 "$final_path" -f2 "$gerado_path" -o "$output_path"
+              
+              if [[ -f "vars.txt" ]]; then
+                echo "[LOG] vars.txt gerado para $prefix. Movendo para template_final/."
+                mv vars.txt "template_final/vars_${prefix}.txt"
+              fi
             else
-              echo "Aviso: vars.txt não foi gerado pelo script."
+              echo "[AVISO] Arquivo final não encontrado para o prefixo: $prefix (Esperado: $final_path)"
             fi
-          else
-            echo "Erro: Arquivos necessários não encontrados em template_atualizado."
-            exit 1
-          fi
+          done
 
-      - name: Commit and Push to Repository
+      - name: Publish Results to Repository
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Adiciona os arquivos específicos no diretório final
-          git add template_final/ARQUIVO_TEMPLATE_FINAL.yaml
-          git add template_final/vars.txt
+          # Adiciona apenas a pasta de destino final
+          git add template_final/
           
-          # Só realiza o commit se houver mudanças detectadas
+          # Verifica alterações staged antes de commitar
           if ! git diff --staged --quiet; then
+            echo "Alterações detectadas. Realizando commit..."
             git commit -m "chore: atualização automática de template_final e vars.txt [skip ci]"
             git push
           else
-            echo "Nenhuma alteração detectada nos arquivos finais."
+            echo "Nenhuma mudança relevante encontrada em template_final/. Encerrando."
           fi
