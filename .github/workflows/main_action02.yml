@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -24,36 +26,44 @@ jobs:
       - name: Initialize Directories
         run: mkdir -p template_atualizado template_final
 
-      - name: Run Comparison and Finalize
+      - name: Run Comparison and Update Repository
         run: |
-          # Define caminhos dos arquivos baseados na sua regra
+          # Definição dos caminhos conforme sua regra
           FILE_GERADO="template_atualizado/ARQUIVO_TEMPLATE_GERADO.yaml"
           FILE_FINAL_INPUT="template_atualizado/ARQUIVO_TEMPLATE_FINAL.yaml"
-          VARS_INPUT="template_atualizado/vars.txt"
           
+          # Verifica se os arquivos necessários existem para processar
           if [ -f "$FILE_GERADO" ] && [ -f "$FILE_FINAL_INPUT" ]; then
-            echo "Arquivos detectados. Iniciando consolidação final..."
+            echo "Arquivos encontrados. Iniciando atualização do template final..."
             
-            # Executa o script python conforme solicitado
+            # Executa o script python gerando a saída diretamente em template_final
             python compare.py -f1 "$FILE_FINAL_INPUT" -f2 "$FILE_GERADO" -o "./template_final/ARQUIVO_TEMPLATE_FINAL.yaml"
             
-            # Move o vars.txt (seja o gerado agora ou o que foi inserido na pasta)
+            # Move o vars.txt gerado pelo script para o diretório template_final
             if [ -f "vars.txt" ]; then
               mv vars.txt template_final/
-            elif [ -f "$VARS_INPUT" ]; then
-              cp "$VARS_INPUT" template_final/
+              echo "Arquivo vars.txt movido para template_final."
+            else
+              echo "Aviso: vars.txt não foi gerado pelo script."
             fi
           else
-            echo "Aguardando todos os arquivos necessários em template_atualizado..."
-            exit 0
+            echo "Erro: Arquivos necessários não encontrados em template_atualizado."
+            exit 1
           fi
 
-      - name: Commit and Push Final Results
+      - name: Commit and Push to Repository
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add template_final/
+          
+          # Adiciona os arquivos específicos no diretório final
+          git add template_final/ARQUIVO_TEMPLATE_FINAL.yaml
+          git add template_final/vars.txt
+          
+          # Só realiza o commit se houver mudanças detectadas
           if ! git diff --staged --quiet; then
-            git commit -m "action 02: template final e vars atualizados [skip ci]"
+            git commit -m "chore: atualização automática de template_final e vars.txt [skip ci]"
             git push
+          else
+            echo "Nenhuma alteração detectada nos arquivos finais."
           fi
