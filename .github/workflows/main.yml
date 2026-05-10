@@ -2,47 +2,50 @@ name: "Action 01 - Processamento de Entrada"
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
     paths:
       - 'entrada/**'
 
 jobs:
   generate-output:
+    name: generate-output
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Initialize Directories
-        run: mkdir -p entrada output template_atualizado template_final
-
-      - name: Process Pairs and Run Script
+      - name: Create directories
         run: |
-          # Ativa ignore case para o shell
+          mkdir -p entrada output template_atualizado template_final
+
+      - name: Process input files
+        shell: bash
+        run: |
           shopt -s nocaseglob
           
-          # Itera sobre arquivos YAML que não sejam templates para encontrar os pares
           for file in entrada/*.yaml; do
+            # Verifica se o arquivo existe para evitar erro caso a pasta esteja vazia
+            [ -e "$file" ] || continue
+            
+            # Ignora arquivos que já são templates
             if [[ ! "$file" =~ _TEMPLATE\.yaml$ ]]; then
-              FILENAME=$(basename "$file" .yaml)
-              TEMPLATE_PAIR="entrada/${FILENAME}_TEMPLATE.yaml"
+              filename=$(basename "$file" .yaml)
+              template_file="entrada/${filename}_TEMPLATE.yaml"
+              output_file="output/${filename}_TEMPLATE_GERADO.yaml"
               
-              if [ -f "$TEMPLATE_PAIR" ]; then
-                echo "Processando par: $file e $TEMPLATE_PAIR"
-                GERADO_FILE="output/${FILENAME}_TEMPLATE_GERADO.yaml"
+              if [ -f "$template_file" ]; then
+                echo "Processando: $file com template $template_file"
+                python compare.py -f1 "$template_file" -f2 "$file" -o "$output_file"
                 
-                # Execução do script python
-                python compare.py -f1 "$TEMPLATE_PAIR" -f2 "$file" -o "$GERADO_FILE"
-                
-                # Move vars.txt gerado para output
                 if [ -f "vars.txt" ]; then
                   mv vars.txt output/
                 fi
@@ -50,12 +53,17 @@ jobs:
             fi
           done
 
-      - name: Commit and Push Results
+      - name: Commit and Push changes
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
           git add output/
-          if ! git diff --staged --quiet; then
+          
+          # Verifica se há mudanças antes de prosseguir
+          if ! git diff --cached --quiet; then
             git commit -m "action 01: templates gerados em output [skip ci]"
             git push
+          else
+            echo "Nenhuma alteração detectada no output."
           fi
