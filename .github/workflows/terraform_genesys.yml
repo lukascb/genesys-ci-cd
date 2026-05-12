@@ -3,7 +3,6 @@ name: "Terraform Genesys Deployment"
 on:
   push:
     branches: [ "main" ]
-    # Monitora exclusivamente a pasta terraform na raiz do projeto
     paths:
       - 'terraform/**'
 
@@ -14,49 +13,67 @@ jobs:
     permissions:
       contents: write
 
-    env:
-      GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYS_CLIENT_ID }}
-      GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
-      GENESYSCLOUD_REGION: "sa-east-1"
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-
+    # Adicionamos uma verificação para garantir que houve adições ou modificações
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2 # Necessário para comparar o commit atual com o anterior
+
+      - name: Check for Deleted Files Only
+        id: check_changes
+        run: |
+          # Lista arquivos alterados, ignorando os deletados
+          # 'A' = Adicionado, 'M' = Modificado, 'R' = Renomeado
+          CHANGES=$(git diff --name-only --diff-filter=AMR HEAD^ HEAD | grep '^terraform/' || true)
+          
+          if [ -z "$CHANGES" ]; then
+            echo "Apenas exclusões detectadas ou nenhuma mudança relevante em ./terraform. Cancelando execução."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Mudanças detectadas (adição/modificação). Prosseguindo..."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup Terraform
+        if: steps.check_changes.outputs.skip == 'false'
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.15.2"
 
       - name: Terraform Init
+        if: steps.check_changes.outputs.skip == 'false'
         run: terraform init
         working-directory: ./terraform
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Plan
+        if: steps.check_changes.outputs.skip == 'false'
         run: terraform plan -input=false
         working-directory: ./terraform
+        env:
+          GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYS_CLIENT_ID }}
+          GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
+          GENESYSCLOUD_REGION: "sa-east-1"
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: steps.check_changes.outputs.skip == 'false' && github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -input=false
         working-directory: ./terraform
+        env:
+          GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYS_CLIENT_ID }}
+          GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
+          GENESYSCLOUD_REGION: "sa-east-1"
 
       - name: Sync Flow Files
-        if: success()
+        if: steps.check_changes.outputs.skip == 'false' && success()
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
-          # Garante que os arquivos YAML baixados pelo Terraform sejam commitados
           mkdir -p terraform/genesyscloud/flows
           git add terraform/genesyscloud/flows/*.yaml
-          
           if ! git diff --staged --quiet; then
-            git commit -m "chore: sync genesys flows downloaded via terraform [skip ci]"
+            git commit -m "chore: sync genesys flows [skip ci]"
             git push
-          else
-            echo "Nenhuma alteração nos arquivos YAML detectada."
           fi
