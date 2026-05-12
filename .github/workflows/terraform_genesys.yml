@@ -51,7 +51,7 @@ jobs:
         run: terraform init
         working-directory: ./terraform
         env:
-            TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Plan
         if: steps.check_changes.outputs.skip == 'false'
