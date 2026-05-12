@@ -45,8 +45,8 @@ jobs:
         if: steps.check_changes.outputs.skip == 'false'
         run: terraform init
         working-directory: ./terraform
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+          env:
+            TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Plan
         if: steps.check_changes.outputs.skip == 'false'
@@ -73,6 +73,7 @@ jobs:
           git config --local user.name "github-actions[bot]"
           mkdir -p terraform/genesyscloud/flows
           git add terraform/genesyscloud/flows/*.yaml
+          git add terraform/genesyscloud/flows/*.yml
           if ! git diff --staged --quiet; then
             git commit -m "chore: sync genesys flows [skip ci]"
             git push
