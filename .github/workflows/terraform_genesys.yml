@@ -3,18 +3,18 @@ name: "Terraform Genesys Deployment"
 on:
   push:
     branches: [ "main" ]
+    # Monitora exclusivamente a pasta terraform na raiz do projeto
     paths:
-      - 'terraform/**' # Aciona apenas quando houver mudanças na pasta terraform
+      - 'terraform/**'
 
 jobs:
   terraform:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Necessário para persistir o download do arquivo YAML no repositório
+      contents: write
 
     env:
-      # Credenciais mapeadas a partir dos Secrets do GitHub
       GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYS_CLIENT_ID }}
       GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
       GENESYSCLOUD_REGION: "sa-east-1"
@@ -40,7 +40,7 @@ jobs:
         working-directory: ./terraform
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -input=false
         working-directory: ./terraform
 
@@ -50,7 +50,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Garante que os arquivos baixados pelo Terraform sejam rastreados
+          # Garante que os arquivos YAML baixados pelo Terraform sejam commitados
           mkdir -p terraform/genesyscloud/flows
           git add terraform/genesyscloud/flows/*.yaml
           
