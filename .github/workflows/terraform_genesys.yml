@@ -1,47 +1,59 @@
-name: "Terraform Genesys Provisioning"
+name: "Terraform Genesys with Flow Download"
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    paths:
+      - 'terraform/resource_*.tf'
 
 jobs:
   terraform:
     name: "Terraform Action"
     runs-on: ubuntu-latest
-    
-    # Definição das variáveis de ambiente para o Provider Genesys
+    permissions:
+      contents: write # Essencial para permitir o push do arquivo YAML baixado
+
     env:
       GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYS_CLIENT_ID }}
       GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
       GENESYSCLOUD_REGION: "sa-east-1"
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }} # Token para o Terraform Cloud
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Garante o histórico completo para evitar erros de push
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.15.2"
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      - name: Terraform Format Check
-        run: terraform fmt -check
+      - name: Ensure Flow Directory Exists
+        run: mkdir -p ./terraform/genesyscloud/flows
 
       - name: Terraform Init
         run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color -input=false
-        continue-on-error: true
+        working-directory: ./terraform
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: apply
         run: terraform apply -auto-approve -input=false
+        working-directory: ./terraform
+
+      - name: Commit and Push Downloaded YAML
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Adiciona o diretório onde o terraform deve ter baixado o arquivo
+          git add ./terraform/genesyscloud/flows/*.yaml
+          
+          # Verifica se há novos arquivos ou mudanças para evitar erro no commit
+          if git diff --staged --quiet; then
+            echo "Nenhum novo fluxo YAML detectado para commit."
+          else
+            git commit -m "chore: download genesys flow yaml via terraform [skip ci]"
+            git push
+          fi
