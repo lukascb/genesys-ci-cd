@@ -19,7 +19,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 2 # Necessário para comparar o commit atual com o anterior
-
+          
+      - name: Criar diretório
+        id: criar_genesyscloud
+        run: |
+          mkdir -p terraform/genesyscloud/flows
+          
       - name: Check for Deleted Files Only
         id: check_changes
         run: |
@@ -45,7 +50,7 @@ jobs:
         if: steps.check_changes.outputs.skip == 'false'
         run: terraform init
         working-directory: ./terraform
-          env:
+        env:
             TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Plan
