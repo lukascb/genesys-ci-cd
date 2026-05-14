@@ -32,6 +32,11 @@ jobs:
           [ -z "${{ secrets.TF_CLIENT_ID }}" ]     && echo " CLIENT_ID missing"     || echo " CLIENT_ID set"
           [ -z "${{ secrets.TF_CLIENT_SECRET }}" ] && echo " CLIENT_SECRET missing" || echo " CLIENT_SECRET set"
           [ -z "${{ secrets.TF_TOKEN_app_terraform_io }}" ] && echo " TF_TOKEN missing" || echo " TF_TOKEN set"
+        env:
+          GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
+          GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
+          GENESYSCLOUD_REGION: "sa-east-1"
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
           
       - name: Criar diretório
