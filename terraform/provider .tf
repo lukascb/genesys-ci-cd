@@ -16,9 +16,4 @@ terraform {
 
 provider "genesyscloud" {
   # O ID e Secret ele pegará das env vars silenciosamente.
-  timeouts {
-      create = "10m"
-      update = "10m"
-      delete = "10m"
-    }
 }
