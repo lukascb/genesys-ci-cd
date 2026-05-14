@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'terraform/*teste.tf'
+      - 'terraform/Fluxo teste.tf'
 
 jobs:
   terraform:
