@@ -14,6 +14,12 @@ terraform {
   }
 }
 
-provider "genesyscloud" {
+variable "genesys_region" {
+  type    = string
+  default = "sa-east-1"
+}
 
+provider "genesyscloud" {
+  aws_region = var.genesys_region
+  # O ID e Secret ele pegará das env vars silenciosamente.
 }
