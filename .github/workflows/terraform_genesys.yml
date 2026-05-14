@@ -36,9 +36,9 @@ jobs:
           [ -z "$GENESYSCLOUD_OAUTHCLIENT_SECRET" ] && echo " CLIENT_SECRET missing" || echo " CLIENT_SECRET set"
           [ -z "$TF_TOKEN_app_terraform_io" ] && echo " TF_TOKEN missing" || echo " TF_TOKEN set"
           [ -z "$GENESYSCLOUD_REGION " ] && echo " Region missing" || echo " TF_TOKEN set"
-          [ -z "$GENESYSCLOUD_TOKEN_INIT_TIMEOUT " ] && echo " Token Init Timeout" || echo " Token Init Timeout NOT SET"
-          [ -z "$GENESYSCLOUD_TOKEN_ACQUIRE_TIMEOUT " ] && echo " Token Acquire Timeout" || echo " Token Init Acquire NOT SET"
-          [ -z "$GENESYSCLOUD_CUSTOM_RETRY_TIMEOUT " ] && echo " Token Retry Timeout" || echo " Token Retry Acquire NOT SET"
+          [ -z "$GENESYSCLOUD_TOKEN_INIT_TIMEOUT " ] && echo " Token Init Timeout NOT SET" || echo "Token Init Timeout "
+          [ -z "$GENESYSCLOUD_TOKEN_ACQUIRE_TIMEOUT " ] && echo "Token Init Acquire NOT SET" || echo "  Token Acquire Timeout"
+          [ -z "$GENESYSCLOUD_CUSTOM_RETRY_TIMEOUT " ] && echo "  Token Retry Acquire NOT SET" || echo "Token Retry Timeout"
           
         env:
           GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
