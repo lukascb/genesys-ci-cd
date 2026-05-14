@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 2 # Necessário para comparar o commit atual com o anterior
      
       
-      - name: 🔐 Validate secrets are set
+      - name: Validate secrets are set
         run: |
           [ -z "${{ secrets.TF_CLIENT_ID }}" ]     && echo " CLIENT_ID missing"     || echo " CLIENT_ID set"
           [ -z "${{ secrets.TF_CLIENT_SECRET }}" ] && echo " CLIENT_SECRET missing" || echo " CLIENT_SECRET set"
@@ -43,6 +43,9 @@ jobs:
         id: criar_genesyscloud
         run: |
           mkdir -p terraform/genesyscloud/flows
+          [ -z "${{ secrets.TF_CLIENT_ID }}" ]     && echo " CLIENT_ID missing"     || echo " CLIENT_ID set"
+          [ -z "${{ secrets.TF_CLIENT_SECRET }}" ] && echo " CLIENT_SECRET missing" || echo " CLIENT_SECRET set"
+          [ -z "${{ secrets.TF_TOKEN_app_terraform_io }}" ] && echo " TF_TOKEN missing" || echo " TF_TOKEN set"
           
       - name: Check for Deleted Files Only
         id: check_changes
