@@ -62,12 +62,14 @@ jobs:
           GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
           GENESYSCLOUD_REGION: "sa-east-1"
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-          run: |
             echo $GENESYSCLOUD_REGION
-            echo $GENESYSCLOUD_OAUTHCLIENT_ID
-            echo $GENESYSCLOUD_OAUTHCLIENT_SECRET
-            echo $GENESYSCLOUD_REGION
-
+      
+      - name: Verifica variáveis de ambiente
+        run: |
+          echo $GENESYSCLOUD_REGION
+          echo $GENESYSCLOUD_OAUTHCLIENT_ID
+          echo $GENESYSCLOUD_OAUTHCLIENT_SECRET
+      
       - name: Terraform Apply
         if: steps.check_changes.outputs.skip == 'false' && github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -input=false
