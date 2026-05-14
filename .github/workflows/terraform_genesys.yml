@@ -42,9 +42,7 @@ jobs:
 
       - name: Check connectivity to Genesys Cloud
         run: |
-          curl -v --max-time 10 https://login.mypurecloud.com || echo "FAILED: login endpoint"
           curl -v --max-time 10 https://login.sae1.pure.cloud || echo "FAILED: login endpoint"
-          curl -v --max-time 10 https://api.mypurecloud.com  || echo "FAILED: api endpoint"
           curl -v --max-time 10 https://api.sae1.pure.cloud  || echo "FAILED: api endpoint"
 
       - name: Setup Terraform
