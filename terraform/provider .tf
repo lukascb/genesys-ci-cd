@@ -15,7 +15,5 @@ terraform {
 }
 
 provider "genesyscloud" {
-  aws_region = var.genesys_region
-  # O provider lerá automaticamente as variáveis GENESYSCLOUD_OAUTHCLIENT_ID, 
-  # GENESYSCLOUD_OAUTHCLIENT_SECRET e GENESYSCLOUD_REGION do ambiente do GitHub Action.
+  aws_region = "sa-east-1"
 }
