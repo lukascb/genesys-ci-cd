@@ -6,6 +6,12 @@ on:
     paths:
       - 'terraform/Fluxo teste.tf'
 
+env:
+  GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
+  GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
+  GENESYSCLOUD_REGION: "sa-east-1"
+  TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+
 jobs:
   terraform:
     name: "Terraform Apply"
@@ -19,6 +25,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 2 # Necessário para comparar o commit atual com o anterior
+     
+      
+      - name: 🔐 Validate secrets are set
+        run: |
+          [ -z "${{ secrets.TF_CLIENT_ID }}" ]     && echo " CLIENT_ID missing"     || echo " CLIENT_ID set"
+          [ -z "${{ secrets.TF_CLIENT_SECRET }}" ] && echo " CLIENT_SECRET missing" || echo " CLIENT_SECRET set"
+          [ -z "${{ secrets.TF_TOKEN_app_terraform_io }}" ] && echo " TF_TOKEN missing" || echo " TF_TOKEN set"
+
           
       - name: Criar diretório
         id: criar_genesyscloud
