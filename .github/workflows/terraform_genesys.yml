@@ -6,19 +6,19 @@ on:
     paths:
       - 'terraform/Fluxo teste.tf'
 
-env:
-  GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
-  GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
-  GENESYSCLOUD_REGION: "sa-east-1"
-  TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-  GENESYSCLOUD_TOKEN_INIT_TIMEOUT: "120s"
-  GENESYSCLOUD_TOKEN_ACQUIRE_TIMEOUT: "60s"
-  GENESYSCLOUD_CUSTOM_RETRY_TIMEOUT: "10m"
 
 jobs:
   terraform:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    env:
+      GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
+      GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
+      GENESYSCLOUD_REGION: "sa-east-1"
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+      GENESYSCLOUD_TOKEN_INIT_TIMEOUT: "120s"
+      GENESYSCLOUD_TOKEN_ACQUIRE_TIMEOUT: "60s"
+      GENESYSCLOUD_CUSTOM_RETRY_TIMEOUT: "10m"
     permissions:
       contents: write
 
