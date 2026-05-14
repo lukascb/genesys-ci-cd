@@ -15,5 +15,5 @@ terraform {
 }
 
 provider "genesyscloud" {
-  aws_region = "sa-east-1"
+
 }
