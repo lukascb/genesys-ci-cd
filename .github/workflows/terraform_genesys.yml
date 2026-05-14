@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'terraform/**'
+      - 'terraform/*teste.tf'
 
 jobs:
   terraform:
@@ -30,7 +30,7 @@ jobs:
         run: |
           # Lista arquivos alterados, ignorando os deletados
           # 'A' = Adicionado, 'M' = Modificado, 'R' = Renomeado
-          CHANGES=$(git diff --name-only --diff-filter=AMR HEAD^ HEAD | grep '^terraform/' || true)
+          CHANGES=$(git diff --name-only --diff-filter=AMR HEAD^ HEAD | grep "terraform/*teste.tf" || true)
           
           if [ -z "$CHANGES" ]; then
             echo "Apenas exclusões detectadas ou nenhuma mudança relevante em ./terraform. Cancelando execução."
