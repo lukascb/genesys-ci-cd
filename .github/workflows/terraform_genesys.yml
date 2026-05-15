@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'terraform/Fluxo teste.tf'
+      - './terraform/Fluxo teste.tf'
 
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
       - name: Criar diretório
         id: criar_genesyscloud
         run: |
-          mkdir -p terraform/genesyscloud/flows
+          mkdir -p ./terraform/genesyscloud/flows
           
       - name: Check for Deleted Files Only
         id: check_changes
@@ -97,13 +97,13 @@ jobs:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Debug Files
-        run: ls -R terraform/genesyscloud/flows/
+        run: ls -R ./terraform/genesyscloud/flows/
       
       - name: Git Config and Add
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add . # Adiciona tudo que foi alterado para evitar erro de pathspec
+          git add ./terraform/genesyscloud/flows/
           git commit -m "Update Genesys Cloud flows" || echo "No changes to commit"
 
         
