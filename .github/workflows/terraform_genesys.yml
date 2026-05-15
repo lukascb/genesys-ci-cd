@@ -102,7 +102,7 @@ jobs:
         working-directory: ./terraform
         run: |
           # ls -R ./
-          find . -name "*.yaml" -o -name "*.yml"
+          find . -name "*.yaml"
           
       
       - name: Git Config and Add
