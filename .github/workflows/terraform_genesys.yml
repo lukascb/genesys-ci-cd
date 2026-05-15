@@ -12,6 +12,7 @@ jobs:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
     env:
+      TF_LOG: DEBUG
       GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
       GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
       GENESYSCLOUD_REGION: "sa-east-1"
