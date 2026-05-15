@@ -101,7 +101,7 @@ jobs:
       - name: Debug Files
         working-directory: ./terraform
         run: |
-          find . -name "*.yaml"
+          ls -R /home/runner/work/
           
       
       - name: Git Config and Add
