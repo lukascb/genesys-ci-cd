@@ -79,7 +79,7 @@ jobs:
         if: steps.check_changes.outputs.skip == 'false'
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.15.2"
+          terraform_version: "1.15.3"
 
       - name: Terraform Init
         if: steps.check_changes.outputs.skip == 'false'
