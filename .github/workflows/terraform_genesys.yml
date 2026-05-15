@@ -96,15 +96,14 @@ jobs:
           GENESYSCLOUD_REGION: "sa-east-1"
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
-      - name: Sync Flow Files
-        if: steps.check_changes.outputs.skip == 'false' && success()
+      - name: Debug Files
+        run: ls -R terraform/genesyscloud/flows/
+      
+      - name: Git Config and Add
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          mkdir -p terraform/genesyscloud/flows
-          git add terraform/genesyscloud/flows/*.yaml
-          git add terraform/genesyscloud/flows/*.yml
-          if ! git diff --staged --quiet; then
-            git commit -m "chore: sync genesys flows [skip ci]"
-            git push
-          fi
+          git add . # Adiciona tudo que foi alterado para evitar erro de pathspec
+          git commit -m "Update Genesys Cloud flows" || echo "No changes to commit"
+
+        
