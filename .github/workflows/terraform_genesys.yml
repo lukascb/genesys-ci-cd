@@ -102,6 +102,7 @@ jobs:
         working-directory: ./terraform
         run: |
           ls -R ./
+          find . -name "*.yaml" -o -name "*.yml"
       
       - name: Git Config and Add
         working-directory: ./terraform
