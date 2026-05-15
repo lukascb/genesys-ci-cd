@@ -40,20 +40,11 @@ jobs:
           [ -z "$GENESYSCLOUD_TOKEN_ACQUIRE_TIMEOUT " ] && echo "Token Init Acquire NOT SET" || echo "  Token Acquire Timeout"
           [ -z "$GENESYSCLOUD_CUSTOM_RETRY_TIMEOUT " ] && echo "  Token Retry Acquire NOT SET" || echo "Token Retry Timeout"
           
-        env:
-          GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
-          GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
-          GENESYSCLOUD_REGION: "sa-east-1"
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-
           
       - name: Criar diretório
         id: criar_genesyscloud
         run: |
           mkdir -p terraform/genesyscloud/flows
-          [ -z "$GENESYSCLOUD_OAUTHCLIENT_ID" ]     && echo " CLIENT_ID missing"     || echo " CLIENT_ID set"
-          [ -z "$GENESYSCLOUD_OAUTHCLIENT_SECRET" ] && echo " CLIENT_SECRET missing" || echo " CLIENT_SECRET set"
-          [ -z "$TF_TOKEN_app_terraform_io" ] && echo " TF_TOKEN missing" || echo " TF_TOKEN set"
           
       - name: Check for Deleted Files Only
         id: check_changes
@@ -70,11 +61,6 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Check connectivity to Genesys Cloud
-        run: |
-          curl -v --max-time 10 https://login.sae1.pure.cloud || echo "FAILED: login endpoint"
-          curl -v --max-time 10 https://api.sae1.pure.cloud  || echo "FAILED: api endpoint"
-
       - name: Setup Terraform
         if: steps.check_changes.outputs.skip == 'false'
         uses: hashicorp/setup-terraform@v3
@@ -87,18 +73,7 @@ jobs:
         working-directory: ./terraform
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-      
-      - name: Verifica variáveis de ambiente
-        run: |
-          echo $GENESYSCLOUD_REGION
-          echo $GENESYSCLOUD_OAUTHCLIENT_ID
-          echo $GENESYSCLOUD_OAUTHCLIENT_SECRET
-        env:
-          GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
-          GENESYSCLOUD_OAUTHCLIENT_SECRET: ${{ secrets.GENESYS_CLIENT_SECRET }}
-          GENESYSCLOUD_REGION: "sa-east-1"
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-          
+                
       - name: Terraform Plan
         if: steps.check_changes.outputs.skip == 'false'
         run: terraform plan -input=false
