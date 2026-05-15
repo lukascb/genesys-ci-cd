@@ -102,7 +102,9 @@ jobs:
 
       - name: Debug Files
         working-directory: ./terraform
-        run: pwd 
+        run: |
+          pwd 
+          ls -R genesyscloud/
           
       
       - name: Git Config and Add
