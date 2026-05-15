@@ -91,7 +91,7 @@ jobs:
       - name: Terraform Apply
         if: steps.check_changes.outputs.skip == 'false' && github.ref == 'refs/heads/main'
         run: |
-          terraform apply -auto-approve -input=false
+          terraform apply -auto-approve -input=false -replace="genesyscloud_flow.TESTE2"
           pwd
         working-directory: ./terraform
         env:
