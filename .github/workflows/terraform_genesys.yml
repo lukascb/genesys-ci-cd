@@ -90,7 +90,9 @@ jobs:
       
       - name: Terraform Apply
         if: steps.check_changes.outputs.skip == 'false' && github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -input=false
+        run: |
+          terraform apply -auto-approve -input=false
+          pwd
         working-directory: ./terraform
         env:
           GENESYSCLOUD_OAUTHCLIENT_ID: ${{ secrets.GENESYSCLOUD_OAUTHCLIENT_ID }}
@@ -100,10 +102,7 @@ jobs:
 
       - name: Debug Files
         working-directory: ./terraform
-        run: |
-          ls -R /home/runner/work/
-          echo "Estou em:" 
-          pwd 
+        run: pwd 
           
       
       - name: Git Config and Add
