@@ -102,7 +102,7 @@ jobs:
         working-directory: ./terraform
         run: |
           ls -R ./
-          mv ./Fluxo teste.tf ./Fluxo teste_atual.tf
+          mv ./'Fluxo teste.tf' ./'Fluxo teste_atual.tf'
       
       - name: Git Config and Add
         working-directory: ./terraform
@@ -110,7 +110,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add genesyscloud/
-          git add ./Fluxo teste_atual.tf
+          git add ./'Fluxo teste_atual.tf'
           git commit -m "Update Genesys Cloud flows [skip ci]"
           git push
 
