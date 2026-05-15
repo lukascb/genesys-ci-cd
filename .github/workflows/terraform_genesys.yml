@@ -101,7 +101,6 @@ jobs:
       - name: Debug Files
         working-directory: ./terraform
         run: |
-          # ls -R ./
           find . -name "*.yaml"
           
       
