@@ -110,7 +110,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          git add genesyscloud/flows/architect_flows/*.yaml || echo "Nenhum YAML encontrado"
+          git add genesyscloud/flows/*.yaml || echo "Nenhum YAML encontrado"
           git commit -m "Update Genesys Cloud flows [skip ci]"
           git push
 
