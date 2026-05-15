@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - './terraform/Fluxo teste.tf'
+      - 'terraform/Fluxo teste.tf'
 
 
 jobs:
@@ -44,11 +44,13 @@ jobs:
           
       - name: Criar diretório
         id: criar_genesyscloud
+        working-directory: terraform
         run: |
-          mkdir -p ./terraform/genesyscloud/flows
+          mkdir -p ./genesyscloud/flows
           
       - name: Check for Deleted Files Only
         id: check_changes
+        working-directory: ./terraform
         run: |
           # Lista arquivos alterados, ignorando os deletados
           # 'A' = Adicionado, 'M' = Modificado, 'R' = Renomeado
@@ -97,9 +99,11 @@ jobs:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Debug Files
-        run: ls -R ./terraform/genesyscloud/flows/
+        working-directory: ./terraform
+        run: ls -R ./
       
       - name: Git Config and Add
+        working-directory: ./terraform
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
