@@ -102,6 +102,7 @@ jobs:
         working-directory: ./terraform
         run: |
           ls -R /home/runner/work/
+          echo "Estou em:" || pwd 
           
       
       - name: Git Config and Add
