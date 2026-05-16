@@ -6,13 +6,6 @@ terraform {
       version = ">= 1.6.0"
     }
   }
-  cloud {
-    organization = "Itapiruba"
-    workspaces {
-      name = "Solve"
-    }
-  }
-}
 
 provider "genesyscloud" {
   # O ID e Secret ele pegará das env vars silenciosamente.
