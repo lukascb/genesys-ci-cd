@@ -1,0 +1,179 @@
+botFlow:
+  name: TESTE RafaL
+  description: teste de bot flow coletando intent com knowledge article
+  division: Home
+  startUpRef: "/botFlow/bots/bot[Default Bot_10]"
+  defaultLanguage: pt-br
+  supportedLanguages:
+    pt-br:
+      defaultLanguageSkill:
+        noValue: true
+      speechToText:
+        engine:
+          name: Genesys Enhanced v2
+          defaultEngine: true
+  variables:
+    - knowledgeBaseDocumentCollectionVariable:
+        name: Flow.resultado
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+  settingsActionDefaults:
+    callGuide:
+      voiceProcessingPrompt:
+        exp: MakeCommunication(PromptSystem.processing_keyboard)
+    askForIntent:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+    askForSlot:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+    askForBoolean:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+    loopAnythingElse:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+  settingsErrorHandling:
+    errorHandling:
+      exit:
+        none: true
+    enableAgentEscalation:
+      lit: true
+    errorEventHandover:
+      exp: "MakeCommunication(\n  \"Desculpe, ocorreu um erro. Aguarde um momento enquanto transfiro você para alguém que possa ajudar.\")"
+    agentEscalationConfirmation:
+      exp: "MakeCommunication(\n  \"Você deseja falar com um assistente. É isso?\")"
+    agentEscalationHandover:
+      exp: "MakeCommunication(\n  \"Aguarde um momento, vou transferi-lo para alguém.\")"
+    recognitionFailureEventHandover:
+      exp: "MakeCommunication(\n  \"Desculpe, não estou entendendo. Aguarde um momento enquanto transfiro você para alguém que possa ajudar.\")"
+    recognitionFailureEventHandling:
+      exit:
+        none: true
+    agentEscalationHandling:
+      exit:
+        none: true
+  settingsPrompts:
+    ensureAudioInPrompts: false
+    promptMediaToValidate:
+      - mediaType: audio
+      - mediaType: tts
+  settingsBotFlow:
+    voiceProcessingPrompt:
+      noValue: true
+    initialPlaybackDelay:
+      lit:
+        ms: 100
+    minimumPlaybackTime:
+      lit:
+        seconds: 1
+    virtualAgentEnabled: true
+  settingsUserInput:
+    enableBargeIn:
+      lit: true
+    enableAutomaticQuickReplies:
+      lit: true
+    noMatchesMax:
+      lit: 3
+    noInputsMax:
+      lit: 3
+    noInputsTimeout:
+      lit:
+        seconds: 7
+    speechToTextSpeechDetectionSensitivity:
+      noValue: true
+    speechToTextMaxSpeechTimeout:
+      noValue: true
+    enableIntentClassificationHinting:
+      lit: false
+    interDigitTimeout:
+      lit:
+        seconds: 3
+    dtmfTerminatingCharacter:
+      noValue: true
+    confirmationRejectionsMax:
+      lit: 3
+    collectionLowConfidenceThreshold:
+      lit: 20
+    collectionHighConfidenceThreshold:
+      lit: 70
+    confirmationLowConfidenceThreshold:
+      lit: 40
+    noMatchApology:
+      exp: "MakeCommunication(\n  \"Desculpe.\")"
+    noInputApology:
+      exp: "MakeCommunication(\n  \"Desculpe, não consegui escutar.\")"
+    noToConfirmationApology:
+      exp: "MakeCommunication(\n  \"Enganei-me.\")"
+    confirmationNoMatchApology:
+      exp: "MakeCommunication(\n  \"Desculpe, diga sim ou não.\")"
+    confirmationNoInputApology:
+      exp: "MakeCommunication(\n  \"Desculpe, não escutei. Por favor, diga sim ou não.\")"
+  settingsKnowledge:
+    Tolentino Teste:
+      knowledgeVersion:
+        lit: v2
+      maxNumOfAnswersReturned:
+        lit: 1
+      knowledgeInitialResponseSingle:
+        noValue: true
+      sendKnowledgeFeedback:
+        lit: false
+      responseBias:
+        lit: knowledge
+      knowledgeSettingsMode:
+        lit: standard
+  settingsVirtualAgent:
+    summarization:
+      lit: false
+    assignWrapupCodes:
+      lit: false
+  bots:
+    - bot:
+        name: Default Bot
+        refId: Default Bot_10
+        actions:
+          - askForIntent:
+              name: Ask for Intent
+              question:
+                exp: "MakeCommunication(\n  \"fala algo sobre votorantim ai\")"
+              knowledgeSearchResult:
+                var: Flow.resultado
+              noInput:
+                exp: "MakeCommunication(\n  \"deu nao, tente de novo\")"
+              noMatch:
+                exp: "MakeCommunication(\n  \"Diga-me novamente o que gostaria de fazer.\")"
+              voiceEndOfInputTimeout:
+                noValue: true
+              outputs:
+                noIntent:
+                  enabled: false
+                knowledge:
+                  enabled: true
+                  actions:
+                    - setParticipantData:
+                        name: Set Participant Data
+                        attributes:
+                          - attribute:
+                              name:
+                                lit: teste
+                              value:
+                                exp: Flow.resultado
+                maxNoInputs:
+                  enabled: false
+          - exitBotFlow:
+              name: Exit Bot Flow
+  settingsNaturalLanguageUnderstanding:
+    nluDomainVersion:
+      intents: []
+      entities: []
+      entityTypes: []
+      language: pt-br
+      languageVersions: {}
+    mutedUtterances: []
