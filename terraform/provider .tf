@@ -6,6 +6,7 @@ terraform {
       version = ">= 1.6.0"
     }
   }
+}
 
 provider "genesyscloud" {
   # O ID e Secret ele pegará das env vars silenciosamente.
