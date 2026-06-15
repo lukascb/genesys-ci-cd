@@ -1,0 +1,63 @@
+name: Action-01-Processamento-Entrada
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - entrada/*
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+    persistCredentials: true
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.11'
+      addToPath: true
+
+  - script: |
+      mkdir -p entrada output template_atualizado template_final
+    displayName: "Create directories"
+
+  - script: |
+      shopt -s nocaseglob
+
+      for file in entrada/*.yaml; do
+        [ -e "$file" ] || continue
+        
+        if [[ ! "$file" =~ _TEMPLATE\.yaml$ ]]; then
+          filename=$(basename "$file" .yaml)
+          template_file="entrada/${filename}_TEMPLATE.yaml"
+          output_file="output/${filename}_TEMPLATE_GERADO.yaml"
+          
+          if [ -f "$template_file" ]; then
+            echo "Processando: $file com template $template_file"
+            python compare.py -f1 "$template_file" -f2 "$file" -o "$output_file"
+            
+            if [ -f "vars.txt" ]; then
+              mv vars.txt output/
+            fi
+          fi
+        fi
+      done
+    displayName: "Process input files"
+
+  - script: |
+      git config user.name "azure-devops[bot]"
+      git config user.email "azure-devops@users.noreply"
+
+      git add output/
+
+      if ! git diff --cached --quiet; then
+        git commit -m "action 01: templates gerados em output [skip ci]"
+        git push origin HEAD:main
+      else
+        echo "Nenhuma alteração detectada no output."
+      fi
+    displayName: "Commit and Push changes"
