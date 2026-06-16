@@ -1,0 +1,163 @@
+inboundCall:
+  name: "{{FLUXO_NAME}}"
+  description: URA SAC Dividida - NEW
+  division: {{DIVISION}}
+  startUpRef: "/inboundCall/tasks/task[01 - Roteamento Inicial_12]"
+  defaultLanguage: pt-br
+  supportedLanguages:
+    pt-br:
+      defaultLanguageSkill:
+        noValue: true
+      textToSpeech:
+        Genesys Enhanced TTS:
+          voice: pt-BR-FranciscaNeural
+                                                        "no":
+                                                          actions:
+                                                            - updateData:
+                                                                name: Update Data
+                                                                statements:
+                                                                  - prompt:
+                                                                      variable: Task.CTL_audioMenu
+                                                                      value:
+                                                                        exp: IF(Task.LOOP_menu == 0, Prompt.OlaSAC_Inc , Prompt.OlaSAC_Inc2)
+                                                            - loopNext:
+                                                                name: Next Loop
+                              - updateData:
+                                  name: Validador CPF
+                                  statements:
+                                    - integer:
+                                        variable: Task.CTL_CPF_Digito_01
+                                        value:
+                                          exp: {{CODIGO_CPF_DIGITO_01}}
+                                    - integer:
+                                        variable: Task.CTL_CPF_Digito_02
+                                        value:
+                                          exp: {{CODIGO_CPF_DIGITO_02}}
+                                    - boolean:
+                                        variable: Flow.CTL_Doc_Valido
+                                        value:
+                                          exp: "If ((Flow.INP_ColetaCPF == \"11111111111\" or \nFlow.INP_ColetaCPF == \"22222222222\" or\nFlow.INP_ColetaCPF == \"33333333333\" or\nFlow.INP_ColetaCPF == \"44444444444\" or\nFlow.INP_ColetaCPF == \"55555555555\" or\nFlow.INP_ColetaCPF == \"66666666666\" or\nFlow.INP_ColetaCPF == \"77777777777\" or\nFlow.INP_ColetaCPF == \"88888888888\" or\nFlow.INP_ColetaCPF == \"99999999999\"), false,\n(If(Task.CTL_CPF_Digito_01 == 10, 0, Task.CTL_CPF_Digito_01) == ToInt(Substring(Flow.INP_ColetaCPF,9,1)) and If(Task.CTL_CPF_Digito_02==10, 0, Task.CTL_CPF_Digito_02) == ToInt(Substring(Flow.INP_ColetaCPF,10,1))))"
+                              - switch:
+                                  name: Switch
+                                  evaluate:
+                                    firstTrue:
+                                      default:
+                                        actions:
+                                          - updateData:
+                                              name: Update Data
+                                              statements:
+                                                - prompt:
+                                                    variable: Task.CTL_audioMenu
+                                                    value:
+                                                      exp: IF(Task.LOOP_menu == 0, Prompt.OlaSAC_Inv, Prompt.OlaSAC_Inv2)
+                                      cases:
+                                        - case:
+                                            value:
+                                              exp: Flow.CTL_Doc_Valido
+                                            actions:
+                                              - callTask:
+                                                  name: "LOG Salva CDR: T07-E"
+                                                  targetTaskRef: "/inboundCall/tasks/task[LOG Salva CDR_13]"
+                                                  taskInputs:
+                                                    - string:
+                                                        name: Task.CTL_CDR
+                                                        value:
+                                                          lit: T07-E
+                                              - setExternalTag:
+                                                  name: Set External Tag
+                                                  externalTag:
+                                                    exp: Flow.INP_ColetaCPF
+                                              - callTask:
+                                                  name: CDRLOGDATA
+                                                  targetTaskRef: "/inboundCall/tasks/task[CDRLOGDATA_4165]"
+                                                  taskInputs:
+                                                    - string:
+                                                        name: Task.CTL_idType
+                                                        value:
+                                                          lit: "2"
+                                                    - string:
+                                                        name: Task.CTL_lastDTMFDialed
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_automatedCall
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.menuErrorType
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_dnaAutomationNew
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_identificationDigits
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_dnaMailing
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_dnaMessageFileName
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_dnaGuess
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_retSoaNew
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_dnaSoa
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_isSOAOK
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.dnaNavTimeNew
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_wasIDByANI
+                                                        value:
+                                                          lit: ""
+                                                    - string:
+                                                        name: Task.CTL_lastSOAFunction
+                                                        value:
+                                                          lit: ""
+                                              - jumpToTask:
+                                                  name: Envia pra task - Latencia
+                                                  targetTaskRef: "/inboundCall/tasks/task[LATENCIA INICIAL_4593]"
+                                                  taskInputs:
+                                                    - prompt:
+                                                        name: Task.CTL_veiodaTaskOi_Audio_LatenciaInicial
+                                                        value:
+                                                          lit:
+                                                            name: Prompt.Latencia
+                                        - case:
+                                            value:
+                                              exp: Length(Flow.INP_ColetaCPF) < 11
+                                            actions:
+                                              - callTask:
+                                                  name: "LOG Salva CDR: T07-F"
+                                                  targetTaskRef: "/inboundCall/tasks/task[LOG Salva CDR_13]"
+                                                  taskInputs:
+                                                    - string:
+                                                        name: Task.CTL_CDR
+                                                        value:
+                                                          lit: T07-F
+                                              - updateData:
+                                                  name: Update Data
+                                                  statements:
+                                                    - prompt:
+                                                        variable: Task.CTL_audioMenu
+                                                        value:
+                                                          exp: IF(Task.LOOP_menu == 0, Prompt.OlaSAC_Inc, Prompt.OlaSAC_Inc2)
+                                           
+ 
